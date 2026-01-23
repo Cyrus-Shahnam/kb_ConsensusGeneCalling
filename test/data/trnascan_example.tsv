@@ -1,0 +1,3 @@
+# tRNAscan-SE test example
+contigA	1	10	50	tRNA-Leu	TAA	TA
+contigB	2	120	80	tRNA-Gly	CCC	CC

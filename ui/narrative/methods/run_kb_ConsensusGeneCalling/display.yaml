@@ -1,0 +1,57 @@
+name: "Gene Calling with Prokka Gene Callers"
+tooltip: "Call CDS/tRNA/rRNA features from an Assembly and build a Genome object."
+screenshots: []
+icon: gene-calling-prokka.png
+
+parameters:
+  assembly_ref:
+    ui-name: "Input Assembly"
+    short-hint: "Assembly to gene-call."
+    long: "Select a KBase Assembly object. The app predicts features and produces an annotated Genome object."
+  output_genome_name:
+    ui-name: "Output Genome name"
+    short-hint: "Name for the output Genome object."
+    long: "A KBaseGenomes.Genome object will be saved with this name."
+  backend:
+    ui-name: "Gene caller backend"
+    short-hint: "Which gene calling engine(s) to run."
+    long: "Default uses the Prokka stack (Prodigal + barrnap + tRNAscan-SE). Prodigal-only is CDS only."
+  call_cds:
+    ui-name: "Call CDS"
+    short-hint: "Predict protein-coding genes (CDS)."
+    long: "If unchecked, no CDS will be predicted."
+  call_rnas:
+    ui-name: "Call RNAs"
+    short-hint: "Predict RNA features (tRNA/rRNA when available)."
+    long: "If unchecked, RNA callers are skipped."
+  min_contig_length:
+    ui-name: "Min contig length"
+    short-hint: "Skip contigs shorter than this."
+    long: "Contigs below this threshold are ignored during calling."
+  genetic_code:
+    ui-name: "Genetic code"
+    short-hint: "NCBI translation table (default 11)."
+    long: "Used for CDS translation and start/stop interpretation."
+  min_cds_length_nt:
+    ui-name: "Min CDS length (nt)"
+    short-hint: "Filter CDS shorter than this length."
+    long: "Short predicted CDS below this threshold are removed."
+  include_partial_genes:
+    ui-name: "Include partial genes"
+    short-hint: "Keep truncated/edge predictions."
+    long: "If enabled, partial/edge features are retained when callers emit them."
+  coordinate_system:
+    ui-name: "Coordinate system"
+    short-hint: "Output coordinate convention."
+    long: "Default is 1-based closed (inclusive start/stop)."
+
+description: |
+  This app predicts genomic features (CDS and optionally tRNA/rRNA) from a single Assembly
+  and saves the result as a KBase Genome object. It is intended for structural annotation / gene calling
+  workflows where you want features created first (and optionally run functional annotation later).
+
+publications:
+  - display-text: "Prokka: rapid prokaryotic genome annotation (Seemann 2014, Bioinformatics)"
+    link: "https://doi.org/10.1093/bioinformatics/btu153"
+  - display-text: "Prokka source repository"
+    link: "https://github.com/tseemann/prokka"

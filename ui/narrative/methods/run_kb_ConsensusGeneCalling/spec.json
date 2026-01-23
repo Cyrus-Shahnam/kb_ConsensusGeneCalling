@@ -1,0 +1,220 @@
+{
+  "ver": 1,
+  "authors": ["ac.shahnam"],
+  "contact": "sv1@ornl.gov",
+  "categories": ["active", "annotation", "sequence"],
+  "widgets": {
+    "input": null,
+    "output": "no-display"
+  },
+  "parameters": [
+    {
+      "id": "assembly_ref",
+      "optional": false,
+      "advanced": false,
+      "allow_multiple": false,
+      "default_values": [""],
+      "field_type": "text",
+      "text_options": {
+        "valid_ws_types": [
+          "KBaseGenomeAnnotations.Assembly",
+          "KBaseAssembly.Assembly"
+        ]
+      }
+    },
+    {
+      "id": "output_genome_name",
+      "optional": false,
+      "advanced": false,
+      "allow_multiple": false,
+      "default_values": ["GeneCalling.Prokka.Genome"],
+      "field_type": "text",
+      "text_options": {
+        "valid_ws_types": ["KBaseGenomes.Genome"],
+        "is_output_name": true
+      }
+    },
+    {
+      "id": "backend",
+      "optional": false,
+      "advanced": false,
+      "allow_multiple": false,
+      "default_values": ["prokka"],
+      "field_type": "dropdown",
+      "dropdown_options": {
+        "options": [
+          { "value": "prokka", "display": "Prokka (Prodigal + tRNAscan-SE + barrnap)" },
+          { "value": "prodigal", "display": "Prodigal only (CDS only)" }
+        ]
+      }
+    },
+    {
+      "id": "call_cds",
+      "optional": true,
+      "advanced": false,
+      "allow_multiple": false,
+      "default_values": ["true"],
+      "field_type": "checkbox",
+      "checkbox_options": {
+        "checked_value": true,
+        "unchecked_value": false
+      }
+    },
+    {
+      "id": "call_rnas",
+      "optional": true,
+      "advanced": false,
+      "allow_multiple": false,
+      "default_values": ["true"],
+      "field_type": "checkbox",
+      "checkbox_options": {
+        "checked_value": true,
+        "unchecked_value": false
+      }
+    },
+    {
+      "id": "min_contig_length",
+      "optional": true,
+      "advanced": true,
+      "allow_multiple": false,
+      "default_values": ["200"],
+      "field_type": "text",
+      "text_options": {
+        "valid_ws_types": [],
+        "validate_as": "int",
+        "min_int": 1,
+        "max_int": 100000000
+      }
+    },
+    {
+      "id": "genetic_code",
+      "optional": true,
+      "advanced": true,
+      "allow_multiple": false,
+      "default_values": ["11"],
+      "field_type": "text",
+      "text_options": {
+        "valid_ws_types": [],
+        "validate_as": "int",
+        "min_int": 1,
+        "max_int": 31
+      }
+    },
+    {
+      "id": "min_cds_length_nt",
+      "optional": true,
+      "advanced": true,
+      "allow_multiple": false,
+      "default_values": ["90"],
+      "field_type": "text",
+      "text_options": {
+        "valid_ws_types": [],
+        "validate_as": "int",
+        "min_int": 0,
+        "max_int": 100000000
+      }
+    },
+    {
+      "id": "include_partial_genes",
+      "optional": true,
+      "advanced": true,
+      "allow_multiple": false,
+      "default_values": ["false"],
+      "field_type": "checkbox",
+      "checkbox_options": {
+        "checked_value": true,
+        "unchecked_value": false
+      }
+    },
+    {
+      "id": "coordinate_system",
+      "optional": true,
+      "advanced": true,
+      "allow_multiple": false,
+      "default_values": ["1-based_closed"],
+      "field_type": "dropdown",
+      "dropdown_options": {
+        "options": [
+          { "value": "1-based_closed", "display": "1-based closed (KBase-style start/stop inclusive)" },
+          { "value": "0-based_halfopen", "display": "0-based half-open (start inclusive, stop exclusive)" }
+        ]
+      }
+    }
+  ],
+  "behavior": {
+    "service-mapping": {
+      "url": "",
+      "name": "kb_ConsensusGeneCalling",
+      "method": "call_genes",
+      "input_mapping": [
+        {
+          "narrative_system_variable": "workspace",
+          "target_property": "workspace_name"
+        },
+        {
+          "input_parameter": "assembly_ref",
+          "target_type_transform": "ref",
+          "target_property": "assembly_ref"
+        },
+        {
+          "input_parameter": "output_genome_name",
+          "target_property": "output_genome_name"
+        },
+        {
+          "input_parameter": "backend",
+          "target_property": "backend"
+        },
+        {
+          "input_parameter": "call_cds",
+          "target_property": "call_cds"
+        },
+        {
+          "input_parameter": "call_rnas",
+          "target_property": "call_rnas"
+        },
+        {
+          "input_parameter": "min_contig_length",
+          "target_type_transform": "int",
+          "target_property": "min_contig_length"
+        },
+        {
+          "input_parameter": "genetic_code",
+          "target_type_transform": "int",
+          "target_property": "genetic_code"
+        },
+        {
+          "input_parameter": "min_cds_length_nt",
+          "target_type_transform": "int",
+          "target_property": "min_cds_length_nt"
+        },
+        {
+          "input_parameter": "include_partial_genes",
+          "target_property": "include_partial_genes"
+        },
+        {
+          "input_parameter": "coordinate_system",
+          "target_property": "coordinate_system"
+        }
+      ],
+      "output_mapping": [
+        {
+          "service_method_output_path": [0, "report_name"],
+          "target_property": "report_name"
+        },
+        {
+          "service_method_output_path": [0, "report_ref"],
+          "target_property": "report_ref"
+        },
+        {
+          "constant_value": "5",
+          "target_property": "report_window_line_height"
+        },
+        {
+          "narrative_system_variable": "workspace",
+          "target_property": "workspace_name"
+        }
+      ]
+    }
+  },
+  "job_id_output_field": "docker"
+}
