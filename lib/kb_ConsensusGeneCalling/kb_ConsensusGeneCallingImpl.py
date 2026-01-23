@@ -78,7 +78,7 @@ class kb_ConsensusGeneCalling:
 
         # ---- Fetch input assembly as FASTA ----
         fasta_path = os.path.join(run_dir, "input.fna")
-        contig_order = fetch_assembly_as_fasta(
+        contig_order, contigs = fetch_assembly_as_fasta(
             dfu=self.dfu,
             assembly_ref=assembly_ref,
             out_fasta_path=fasta_path,
