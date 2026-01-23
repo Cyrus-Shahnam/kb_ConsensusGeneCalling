@@ -1,14 +1,8 @@
 import os
 from typing import Dict, List, Tuple
 
-from installed_clients.ServiceWizardClient import ServiceWizard
 from installed_clients.AssemblyUtilClient import AssemblyUtil
 from installed_clients.DataFileUtilClient import DataFileUtil
-
-
-def _get_service_url(callback_url: str, module_name: str) -> str:
-    sw = ServiceWizard(callback_url)
-    return sw.get_service_status({"module_name": module_name})["url"]
 
 
 def _read_fasta_records(fasta_path: str):
@@ -66,21 +60,22 @@ def fetch_assembly_as_fasta(
     """
     Fetch contigs for a KBase Assembly ref.
 
-    Appdev/prod-friendly approach:
-      1) Try AssemblyUtil.get_assembly_as_fasta (recommended)
-      2) Fallback to DFU.get_objects for legacy/edge cases
+    NO ServiceWizard version:
+      1) Try AssemblyUtil.get_assembly_as_fasta using SDK_CALLBACK_URL
+      2) Fallback to DFU.get_objects (best-effort)
 
     Returns:
       contig_order (list[str]), contigs (dict[str,str])
     """
     callback_url = os.environ.get("SDK_CALLBACK_URL")
     if not callback_url:
-        raise ValueError("SDK_CALLBACK_URL is not set; cannot resolve service URLs.")
+        raise ValueError("SDK_CALLBACK_URL is not set; cannot call AssemblyUtil/DFU.")
 
-    # 1) Preferred: AssemblyUtil
+    last_err = None
+
+    # 1) Preferred: AssemblyUtil via callback URL
     try:
-        au_url = _get_service_url(callback_url, "AssemblyUtil")
-        au = AssemblyUtil(au_url)
+        au = AssemblyUtil(callback_url)
         res = au.get_assembly_as_fasta({"ref": assembly_ref})
         fasta_path = res["path"]  # local file path inside container
         contig_order, contigs = _load_contigs_from_fasta(
@@ -93,7 +88,6 @@ def fetch_assembly_as_fasta(
             )
         return contig_order, contigs
     except Exception as e:
-        # continue to DFU fallback
         last_err = e
 
     # 2) Fallback: DFU get_objects (less reliable for assemblies)
@@ -101,10 +95,8 @@ def fetch_assembly_as_fasta(
         dfu = DataFileUtil(callback_url)
         obj = dfu.get_objects({"object_refs": [assembly_ref]})["data"][0]["data"]
 
-        # Assembly objects vary; try common places sequences might exist.
-        # If your old DFU fallback logic was more complete, keep/merge it here.
-        contigs = {}
-        contig_order = []
+        contigs: Dict[str, str] = {}
+        contig_order: List[str] = []
 
         # Some assemblies may contain 'contigs' array with 'id' and 'sequence'
         if isinstance(obj, dict) and "contigs" in obj and isinstance(obj["contigs"], list):
@@ -122,15 +114,13 @@ def fetch_assembly_as_fasta(
         if not contig_order:
             raise ValueError(
                 "Could not obtain contig sequences from Assembly via DFU fallback, "
-                "or all contigs were filtered out. If using KBase Assembly objects, "
-                "AssemblyUtil is recommended."
+                "or all contigs were filtered out. AssemblyUtil is recommended for Assembly objects."
             )
 
         return contig_order, contigs
 
-    except Exception:
-        # show the AssemblyUtil error too — it’s usually the real clue
+    except Exception as e:
         raise ValueError(
             "Could not obtain contig sequences from Assembly via AssemblyUtil and DFU fallback. "
-            f"AssemblyUtil error was: {repr(last_err)}"
+            f"AssemblyUtil error was: {repr(last_err)}; DFU error was: {repr(e)}"
         )
