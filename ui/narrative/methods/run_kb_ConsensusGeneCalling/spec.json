@@ -18,7 +18,9 @@
       "text_options": {
         "valid_ws_types": [
           "KBaseGenomeAnnotations.Assembly",
-          "KBaseAssembly.Assembly"
+          "KBaseAssembly.Assembly",
+          "KBaseSets.AssemblySet",
+          "KBaseGenomes.Genome"
         ]
       }
     },
