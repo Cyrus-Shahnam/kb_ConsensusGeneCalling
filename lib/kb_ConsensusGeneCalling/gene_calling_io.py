@@ -77,14 +77,15 @@ def _load_contigs_from_fasta(
 
 
 def fetch_assembly_as_fasta(
-    ctx,
-    assembly_ref: str,
-    scratch: str,
+    ctx=None,
+    assembly_ref: str = None,
+    scratch: str = None,
     min_contig_length: int = 0,
     dfu=None,
     out_fasta_path: str = None,
     **kwargs,
 ):
+
     """
     Fetch contigs for a KBase Assembly ref.
 
