@@ -1,4 +1,5 @@
 import os
+import subprocess
 from typing import Dict, List, Tuple
 
 from installed_clients.AssemblyUtilClient import AssemblyUtil
@@ -7,6 +8,27 @@ from installed_clients.DataFileUtilClient import DataFileUtil
 def ensure_dir(path: str) -> str:
     os.makedirs(path, exist_ok=True)
     return path
+
+def run_cmd(cmd, cwd=None, env=None, check=True):
+    """
+    Run a command (list or string). Returns stdout as text.
+    Raises CalledProcessError if check=True and command fails.
+    """
+    shell = isinstance(cmd, str)
+    p = subprocess.run(
+        cmd,
+        cwd=cwd,
+        env=env,
+        shell=shell,
+        stdout=subprocess.PIPE,
+        stderr=subprocess.PIPE,
+        text=True,
+    )
+    if check and p.returncode != 0:
+        raise subprocess.CalledProcessError(
+            p.returncode, cmd, output=p.stdout, stderr=p.stderr
+        )
+    return p.stdout
 
 def _read_fasta_records(fasta_path: str):
     """
