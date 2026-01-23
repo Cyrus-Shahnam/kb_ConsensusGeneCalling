@@ -4,6 +4,9 @@ from typing import Dict, List, Tuple
 from installed_clients.AssemblyUtilClient import AssemblyUtil
 from installed_clients.DataFileUtilClient import DataFileUtil
 
+def ensure_dir(path: str) -> str:
+    os.makedirs(path, exist_ok=True)
+    return path
 
 def _read_fasta_records(fasta_path: str):
     """
