@@ -243,5 +243,6 @@ class kb_ConsensusGeneCalling:
         return {
             "report_name": report_info["name"],
             "report_ref": report_info["ref"]
+            "genome_ref": ""
         }
         #END call_genes
