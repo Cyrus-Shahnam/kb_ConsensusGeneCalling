@@ -81,10 +81,17 @@ def fetch_assembly_as_fasta(
     assembly_ref: str,
     scratch: str,
     min_contig_length: int = 0,
-    dfu=None,  # <-- add this
+    dfu=None,
+    out_fasta_path: str = None,
+    **kwargs,
 ):
     """
     Fetch contigs for a KBase Assembly ref.
+
+    Accepts extra kwargs for compatibility with older/newer callers:
+      - dfu: optional DataFileUtil client
+      - out_fasta_path: optional path to write the fetched FASTA
+      - **kwargs: ignored
 
     NO ServiceWizard version:
       1) Try AssemblyUtil.get_assembly_as_fasta using SDK_CALLBACK_URL
@@ -104,6 +111,14 @@ def fetch_assembly_as_fasta(
         au = AssemblyUtil(callback_url)
         res = au.get_assembly_as_fasta({"ref": assembly_ref})
         fasta_path = res["path"]  # local file path inside container
+
+        # Optional: copy FASTA to requested location
+        if out_fasta_path:
+            ensure_dir(os.path.dirname(out_fasta_path))
+            import shutil
+            shutil.copyfile(fasta_path, out_fasta_path)
+            fasta_path = out_fasta_path
+
         contig_order, contigs = _load_contigs_from_fasta(
             fasta_path, min_contig_length=min_contig_length
         )
@@ -120,12 +135,12 @@ def fetch_assembly_as_fasta(
     try:
         if dfu is None:
             dfu = DataFileUtil(callback_url)
+
         obj = dfu.get_objects({"object_refs": [assembly_ref]})["data"][0]["data"]
 
         contigs: Dict[str, str] = {}
         contig_order: List[str] = []
 
-        # Some assemblies may contain 'contigs' array with 'id' and 'sequence'
         if isinstance(obj, dict) and "contigs" in obj and isinstance(obj["contigs"], list):
             for c in obj["contigs"]:
                 cid = c.get("id") or c.get("contig_id")
@@ -143,6 +158,16 @@ def fetch_assembly_as_fasta(
                 "Could not obtain contig sequences from Assembly via DFU fallback, "
                 "or all contigs were filtered out. AssemblyUtil is recommended for Assembly objects."
             )
+
+        # If caller wanted a FASTA written, write it from contigs we recovered
+        if out_fasta_path:
+            ensure_dir(os.path.dirname(out_fasta_path))
+            with open(out_fasta_path, "w") as f:
+                for cid in contig_order:
+                    f.write(f">{cid}\n")
+                    seq = contigs[cid]
+                    for i in range(0, len(seq), 60):
+                        f.write(seq[i:i+60] + "\n")
 
         return contig_order, contigs
 
