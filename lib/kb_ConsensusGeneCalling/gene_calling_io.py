@@ -81,6 +81,7 @@ def fetch_assembly_as_fasta(
     assembly_ref: str,
     scratch: str,
     min_contig_length: int = 0,
+    dfu=None,  # <-- add this
 ):
     """
     Fetch contigs for a KBase Assembly ref.
@@ -117,7 +118,8 @@ def fetch_assembly_as_fasta(
 
     # 2) Fallback: DFU get_objects (less reliable for assemblies)
     try:
-        dfu = DataFileUtil(callback_url)
+        if dfu is None:
+            dfu = DataFileUtil(callback_url)
         obj = dfu.get_objects({"object_refs": [assembly_ref]})["data"][0]["data"]
 
         contigs: Dict[str, str] = {}
