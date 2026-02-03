@@ -7,6 +7,7 @@ from typing import Dict, List, Tuple
 from installed_clients.AssemblyUtilClient import AssemblyUtil
 from installed_clients.DataFileUtilClient import DataFileUtil
 
+
 def parse_fasta_ids(fasta_path: str) -> List[str]:
     """
     Return a list of FASTA record IDs in file order.
@@ -78,6 +79,7 @@ def ensure_dir(path: str) -> str:
     os.makedirs(path, exist_ok=True)
     return path
 
+
 def run_cmd(cmd, cwd=None, env=None, check=True):
     """
     Run a command (list or string). Returns stdout as text.
@@ -98,6 +100,7 @@ def run_cmd(cmd, cwd=None, env=None, check=True):
             p.returncode, cmd, output=p.stdout, stderr=p.stderr
         )
     return p.stdout
+
 
 def _read_fasta_records(fasta_path: str):
     """
@@ -145,6 +148,41 @@ def _load_contigs_from_fasta(
     return contig_order, contigs
 
 
+def _unwrap_and_validate_return(contig_order, contigs):
+    """
+    Some call sites / refactors accidentally produce contig_order as (order, contigs).
+    This unwraps that case and validates we return (list[str], dict[str,str]).
+    """
+    # Unwrap if contig_order is actually a packed (order, contigs)
+    if (
+        isinstance(contig_order, tuple)
+        and len(contig_order) == 2
+        and isinstance(contig_order[0], list)
+        and isinstance(contig_order[1], dict)
+        and contigs is not None
+        and isinstance(contigs, dict)
+        and len(contigs) == 0
+    ):
+        # In this pattern, contigs arg is often empty while packed tuple holds the real dict
+        contig_order, contigs = contig_order
+
+    # Validate types
+    if not isinstance(contig_order, list):
+        raise TypeError(f"contig_order must be list[str], got {type(contig_order)}: {contig_order}")
+
+    if not contig_order:
+        raise ValueError("contig_order is empty (no contigs after filtering)")
+
+    bad = [x for x in contig_order[:10] if not isinstance(x, str)]
+    if bad:
+        raise TypeError(f"contig_order must be list[str]; found {type(bad[0])} value={bad[0]}")
+
+    if not isinstance(contigs, dict):
+        raise TypeError(f"contigs must be dict[str,str], got {type(contigs)}")
+
+    return contig_order, contigs
+
+
 def fetch_assembly_as_fasta(
     ctx=None,
     assembly_ref: str = None,
@@ -154,7 +192,6 @@ def fetch_assembly_as_fasta(
     out_fasta_path: str = None,
     **kwargs,
 ):
-
     """
     Fetch contigs for a KBase Assembly ref.
 
@@ -170,6 +207,9 @@ def fetch_assembly_as_fasta(
     Returns:
       contig_order (list[str]), contigs (dict[str,str])
     """
+    if not assembly_ref:
+        raise ValueError("assembly_ref is required")
+
     callback_url = os.environ.get("SDK_CALLBACK_URL")
     if not callback_url:
         raise ValueError("SDK_CALLBACK_URL is not set; cannot call AssemblyUtil/DFU.")
@@ -197,7 +237,10 @@ def fetch_assembly_as_fasta(
                 f"AssemblyUtil returned FASTA but all contigs were filtered out "
                 f"(min_contig_length={min_contig_length})."
             )
+
+        contig_order, contigs = _unwrap_and_validate_return(contig_order, contigs)
         return contig_order, contigs
+
     except Exception as e:
         last_err = e
 
@@ -237,8 +280,9 @@ def fetch_assembly_as_fasta(
                     f.write(f">{cid}\n")
                     seq = contigs[cid]
                     for i in range(0, len(seq), 60):
-                        f.write(seq[i:i+60] + "\n")
+                        f.write(seq[i:i + 60] + "\n")
 
+        contig_order, contigs = _unwrap_and_validate_return(contig_order, contigs)
         return contig_order, contigs
 
     except Exception as e:
