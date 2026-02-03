@@ -84,6 +84,20 @@ class kb_ConsensusGeneCalling:
             out_fasta_path=fasta_path,
             min_contig_length=min_contig_length
         )
+        # --- Normalize contig_order shape (defensive) ---
+        # If a single contig was accidentally wrapped, flatten it
+        if (
+            isinstance(contig_order, list)
+            and len(contig_order) == 1
+            and isinstance(contig_order[0], list)
+        ):
+            contig_order = contig_order[0]
+
+        # Final validation
+        if not contig_order or not all(isinstance(x, str) for x in contig_order):
+            raise TypeError(
+                f"contig_order must be list[str]; got {type(contig_order)}: {contig_order}"
+            )
 
         notes = []
         all_features = []
