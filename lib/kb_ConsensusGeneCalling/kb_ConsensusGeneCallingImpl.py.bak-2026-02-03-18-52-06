@@ -34,7 +34,7 @@ class kb_ConsensusGeneCalling:
     ######################################### noqa
     VERSION = "0.0.1"
     GIT_URL = "https://github.com/Cyrus-Shahnam/kb_ConsensusGeneCalling.git"
-    GIT_COMMIT_HASH = "c47b3b1aa35a1a828b63f04d465531dbc27b29a8"
+    GIT_COMMIT_HASH = "f8616a78298c5a693e6d679cf4f914524e93dd30"
 
     #BEGIN_CLASS_HEADER
     #END_CLASS_HEADER
@@ -212,7 +212,7 @@ class kb_ConsensusGeneCalling:
             contig_order=contig_order,
             coordinate_system=coordinate_system,
         )
-        
+
         # ---- Write outputs ----
         features_json_path = os.path.join(run_dir, "features.json")
         features_tsv_path = os.path.join(run_dir, "features.tsv")
@@ -267,10 +267,10 @@ class kb_ConsensusGeneCalling:
             "message": "\n".join(msg_lines),
         })
 
-        output = {
+        return [{
             "report_name": report_info["name"],
-            "report_ref": report_info["ref"],
-        }
+            "report_ref": report_info["ref"]
+        }]
         #END call_genes
 
         # At some point might do deeper type checking...
