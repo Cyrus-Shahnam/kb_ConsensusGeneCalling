@@ -1,4 +1,5 @@
 # -*- coding: utf-8 -*-
+
 #BEGIN_HEADER
 import os
 import uuid
@@ -23,24 +24,12 @@ class kb_ConsensusGeneCalling:
     kb_ConsensusGeneCalling
 
     Module Description:
-    
+    A KBase module: kb_ConsensusGeneCalling
     '''
-
-    ######## WARNING FOR GEVENT USERS ####### noqa
-    # Since asynchronous IO can lead to methods - even the same method -
-    # interrupting each other, you must be *very* careful when using global
-    # state. A method could easily clobber the state set by another while
-    # the latter method is running.
-    ######################################### noqa
-    VERSION = "0.0.1"
-    GIT_URL = "https://github.com/Cyrus-Shahnam/kb_ConsensusGeneCalling.git"
-    GIT_COMMIT_HASH = "f8616a78298c5a693e6d679cf4f914524e93dd30"
 
     #BEGIN_CLASS_HEADER
     #END_CLASS_HEADER
 
-    # config contains contents of config file in a hash or None if it couldn't
-    # be found
     def __init__(self, config):
         #BEGIN_CONSTRUCTOR
         self.config = config
@@ -54,24 +43,8 @@ class kb_ConsensusGeneCalling:
         self.dfu = DataFileUtil(self.callback_url)
         self.report = KBaseReport(self.callback_url)
         #END_CONSTRUCTOR
-        pass
-
 
     def call_genes(self, ctx, params):
-        """
-        :param params: instance of type "CallGenesParams" -> structure:
-           parameter "workspace_name" of String, parameter "assembly_ref" of
-           String, parameter "output_genome_name" of String, parameter
-           "backend" of String, parameter "min_contig_length" of Long,
-           parameter "genetic_code" of Long, parameter "min_cds_length_nt" of
-           Long, parameter "call_cds" of Long, parameter "call_rnas" of Long,
-           parameter "include_partial_genes" of Long, parameter
-           "coordinate_system" of String
-        :returns: instance of type "CallGenesResult" -> structure: parameter
-           "report_name" of String, parameter "report_ref" of String
-        """
-        # ctx is the context object
-        # return variables are: output
         #BEGIN call_genes
         workspace_name = params.get("workspace_name")
         assembly_ref = params.get("assembly_ref")
@@ -272,19 +245,3 @@ class kb_ConsensusGeneCalling:
             "report_ref": report_info["ref"]
         }
         #END call_genes
-
-        # At some point might do deeper type checking...
-        if not isinstance(output, dict):
-            raise ValueError('Method call_genes return value ' +
-                             'output is not type dict as required.')
-        # return the results
-        return [output]
-    def status(self, ctx):
-        #BEGIN_STATUS
-        returnVal = {'state': "OK",
-                     'message': "",
-                     'version': self.VERSION,
-                     'git_url': self.GIT_URL,
-                     'git_commit_hash': self.GIT_COMMIT_HASH}
-        #END_STATUS
-        return [returnVal]

@@ -1,9 +1,78 @@
 import os
 import subprocess
+import gzip
+import shutil
 from typing import Dict, List, Tuple
 
 from installed_clients.AssemblyUtilClient import AssemblyUtil
 from installed_clients.DataFileUtilClient import DataFileUtil
+
+def parse_fasta_ids(fasta_path: str) -> List[str]:
+    """
+    Return a list of FASTA record IDs in file order.
+    ID is the header up to first whitespace (matches _read_fasta_records).
+    """
+    return [cid for cid, _seq in _read_fasta_records(fasta_path)]
+
+
+def _copy_or_decompress_to(src_path: str, dst_path: str) -> str:
+    """
+    Copy src_path to dst_path. If src_path ends with .gz, decompress while copying.
+    Returns dst_path.
+    """
+    ensure_dir(os.path.dirname(dst_path) or ".")
+    if src_path.endswith(".gz"):
+        with gzip.open(src_path, "rt") as fin, open(dst_path, "w") as fout:
+            shutil.copyfileobj(fin, fout)
+    else:
+        shutil.copyfile(src_path, dst_path)
+    return dst_path
+
+
+def stage_input_fasta(
+    *,
+    assembly_ref: str = None,
+    fasta_path: str = None,
+    out_fasta_path: str,
+    min_contig_length: int = 0,
+    dfu=None,
+    ctx=None,
+    scratch: str = None,
+) -> Tuple[List[str], Dict[str, str], str]:
+    """
+    Stage an input FASTA for downstream callers.
+
+    Exactly one of (assembly_ref, fasta_path) must be provided.
+
+    - If assembly_ref is provided: uses fetch_assembly_as_fasta to write a FASTA.
+    - If fasta_path is provided: copies (or gunzips) into out_fasta_path.
+    - Always loads contigs into memory and returns (contig_order, contigs, out_fasta_path).
+
+    Returns:
+      contig_order: list[str]
+      contigs: dict[str,str]
+      staged_fasta_path: str
+    """
+    if bool(assembly_ref) == bool(fasta_path):
+        raise ValueError("Provide exactly one of assembly_ref or fasta_path")
+
+    ensure_dir(os.path.dirname(out_fasta_path) or ".")
+
+    if assembly_ref:
+        contig_order, contigs = fetch_assembly_as_fasta(
+            ctx=ctx,
+            assembly_ref=assembly_ref,
+            scratch=scratch,
+            min_contig_length=min_contig_length,
+            dfu=dfu,
+            out_fasta_path=out_fasta_path,
+        )
+        return contig_order, contigs, out_fasta_path
+
+    # local FASTA input
+    _copy_or_decompress_to(fasta_path, out_fasta_path)
+    contig_order, contigs = _load_contigs_from_fasta(out_fasta_path, min_contig_length=min_contig_length)
+    return contig_order, contigs, out_fasta_path
 
 def ensure_dir(path: str) -> str:
     os.makedirs(path, exist_ok=True)
