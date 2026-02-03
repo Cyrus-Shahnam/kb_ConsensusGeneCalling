@@ -254,8 +254,9 @@ class kb_ConsensusGeneCalling:
             "message": "\n".join(msg_lines),
         })
 
-        return {
+        return [{
             "report_name": report_info["name"],
             "report_ref": report_info["ref"]
-        }
-        #END call_genes
+        }]
+ 
+        #END call_gene
