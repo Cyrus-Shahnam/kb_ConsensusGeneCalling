@@ -20,7 +20,6 @@ module kb_ConsensusGeneCalling {
     typedef structure {
         string report_name;
         string report_ref;
-        string genome_ref;
     } CallGenesResult;
 
     funcdef call_genes(CallGenesParams params) returns (CallGenesResult output);
